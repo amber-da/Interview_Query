@@ -1,0 +1,33 @@
+with eligible as (
+SELECT u.user_id
+, u.name
+, f.friend_id
+, l.page_id
+FROM users u
+left join friends f on u.user_id = f.user_id
+left join likes l on l.user_id = u.user_id
+where
+u.user_id not in (select friend_id from friends where user_id = 3)
+and
+u.user_id not in (select blocked_id from blocks where user_id = 3)
+and
+u.user_id != 3)
+,
+point as (
+select e.user_id
+, e.name as potential_friend_name
+, e.friend_id
+, e.page_id
+, CASE 
+        WHEN e.page_id IN (SELECT page_id FROM likes WHERE user_id = 3) THEN 2 
+        ELSE 0 
+    END AS page_point
+, CASE 
+        WHEN e.friend_id IN (SELECT friend_id FROM friends WHERE user_id = 3) THEN 3 
+        ELSE 0 
+    END AS mutual_friends_points
+from eligible e )
+
+select potential_friend_name
+, (page_point + mutual_friends_points) as friendship_points
+from point
